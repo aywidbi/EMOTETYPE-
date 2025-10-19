@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>7TV Gym - Combos Realistas</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: monospace; }
+  .emote { width: 120px; height: 120px; object-fit: contain; margin: 2px; }
+  .emote-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px; }
+</style>
+</head>
+<body class="bg-slate-900 text-white flex items-center justify-center min-h-screen p-6">
+<div class="w-full max-w-4xl bg-slate-900/80 backdrop-blur rounded-2xl p-6 shadow-2xl border border-slate-700">
+<h1 class="text-2xl font-bold text-center mb-4">7TV Gym - Combos Realistas</h1>
+
+<div class="text-center mb-4">Emote(s)</div>
+<div id="emoteContainer" class="emote-container mb-4"></div>
+
+<div class="mb-4">
+<input id="input" type="text" placeholder="Escribe el nombre del emote..." 
+class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-lg text-white focus:outline-indigo-400">
+</div>
+
+<div class="grid grid-cols-5 gap-4 text-center mb-4">
+  <div>WPM<br><span id="wpm" class="text-xl font-bold">0</span></div>
+  <div>Accuracy<br><span id="acc" class="text-xl font-bold">100%</span></div>
+  <div>Correct Chars<br><span id="correct" class="text-xl font-bold">0</span></div>
+  <div>Typed<br><span id="typed" class="text-xl font-bold">0</span></div>
+  <div>Combos<br><span id="combos" class="text-xl font-bold">0</span></div>
+</div>
+
+<div class="text-center mb-4">Time left: <span id="timer">60</span>s</div>
+
+<div class="flex gap-2 items-center mb-2">
+<button id="start" class="bg-green-600 px-3 py-1 rounded hover:bg-green-500">Start</button>
+<button id="reset" class="bg-red-600 px-3 py-1 rounded hover:bg-red-500">Next Combo</button>
+</div>
+</div>
+
+<script>
+const EMOTES = [
+  { name: "thatsCrazy", img: "https://cdn.7tv.app/emote/01HY9ESXCG0003K02JFQ570HQG/4x.avif" },
+  { name: "EDGY", img: "https://cdn.7tv.app/emote/01GD8YX1JG000EDQQXN4J00CTJ/4x.avif" },
+  { name: "Clueless", img: "https://cdn.7tv.app/emote/01F6T8NM9R0007M5BTFWSP1YSJ/4x.avif" },
+  { name: "Hmm", img: "https://cdn.7tv.app/emote/01F6MA6Y100002B6P5MWZ5D916/4x.avif" },
+  { name: "RatgeHD", img: "https://cdn.7tv.app/emote/01GQMW7ZFG0004A5FQAX7Q1DEB/4x.avif" },
+  { name: "32o", img: "https://cdn.7tv.app/emote/01H3HH5M180005101ADVY57FSB/4x.avif" },
+  { name: "JE", img: "https://cdn.7tv.app/emote/01H6WDGDT8000DNK3M5M1F785Z/4x.avif" },
+  { name: "xD", img: "https://cdn.7tv.app/emote/01FGDMTVR000047CPSV86K4QNC/4x.avif" },
+  { name: "PepeLaugh", img: "https://cdn.7tv.app/emote/01F6Q76NN80005589X3BDK9CN1/4x.avif" },
+  { name: "dahC", img: "https://cdn.7tv.app/emote/01F031AQJR0001TJB3006SVBHR/4x.avif" },
+  { name: "Aware", img: "https://cdn.7tv.app/emote/01FFWH9WV80000JT8GHDKHJNZC/4x.avif" },
+  { name: "War", img: "https://cdn.7tv.app/emote/01H13AEMTR0005EZED5J0EXN3C/4x.avif" },
+  { name: "AnotherLove", img: "https://cdn.7tv.app/emote/01HG0SD1BR000BMG8TJHG4V8GQ/4x.avif" },
+  { name: "LOL", img: "https://cdn.7tv.app/emote/01FZ975PV8000B4AWRZNMVNEXN/4x.avif" },
+  { name: "Susge", img: "https://cdn.7tv.app/emote/01F6S7PENR0008HT14D95H43BY/4x.avif" },
+  { name: "TRU", img: "https://cdn.7tv.app/emote/01GWBD2YR00002CCPRV6KPX758/4x.avif" },
+  { name: "dosecat", img: "https://cdn.7tv.app/emote/01GBRK5FQR0004WV5K7DSA7HV0/4x.avif" },
+  { name: "eJE", img: "https://cdn.7tv.app/emote/01GPEH74W00007ZRB66TX77AYQ/4x.avif" },
+  { name: "dosehiii", img: "https://cdn.7tv.app/emote/01HR03WKFR0007A6HAQTCEP2B3/4x.avif" },
+  { name: "SIII", img: "https://cdn.7tv.app/emote/01FVK8GXMG00048QJVVTD3VRWM/4x.avif" },
+  { name: "ants", img: "https://cdn.7tv.app/emote/01JJ2JXC28YBWJEPKY7CW483VY/4x.avif" },
+  { name: "muh", img: "https://cdn.7tv.app/emote/01J1QQ780R00068734GKCYFFMV/4x.avif" },
+  { name: "Pepega", img: "https://cdn.7tv.app/emote/01EZTD6KQ800012PTN006Q50PV/4x.avif" },
+  { name: "Clap", img: "https://cdn.7tv.app/emote/01F6NE9AER000CKKT9BSDYGT0J/4x.avif", second:true },
+  { name: "TeaTime", img: "https://cdn.7tv.app/emote/01F6ME8MDG0005TFYTWP1H854D/4x.avif", second:true },
+  { name: "RapThis", img: "https://cdn.7tv.app/emote/01F6N6MBK000052X5637DPQTKP/4x.avif", second:true },
+  { name: "ViolinTime", img: "https://cdn.7tv.app/emote/01F6M697J8000B5V5G2M2WDXMX/4x.avif", second:true },
+  { name: "MrDestructoid", img:"https://cdn.7tv.app/emote/01FTEC7QC80001606GRRVVKAH7/4x.avif" },
+  { name: "99o", img:"https://cdn.7tv.app/emote/01JD0HJNVJMQXN5V984AG3MRQD/4x.avif" },
+  { name: "KEK", img:"https://cdn.7tv.app/emote/01F6NP85QG0003C6R1CKK91XW2/4x.avif" },
+  { name: "lO", img:"https://cdn.7tv.app/emote/01JN9NY7XCR7CRPR1NEXC7GCC5/4x.avif" },
+  { name: "ehmmm", img:"https://cdn.7tv.app/emote/01GZZMEJNR00010VJ32FZC95WK/4x.avif" },
+  { name: "Chatting", img:"https://cdn.7tv.app/emote/01FBZESCNR000A6AWCB1X558GZ/4x.avif" },
+  { name: "Jarvis", img:"https://cdn.7tv.app/emote/01F7G3MY6R000CY3XFQMX56G9T/4x.avif" },
+  { name: "SPEEDERS", img:"https://cdn.7tv.app/emote/01FESE5H1R000A35M54YK6J7T9/4x.avif" },
+  { name: "MJMJ", img:"https://cdn.7tv.app/emote/01F9N048XR00005C1KM5Y78039/4x.avif" },
+  { name: "sisi", img:"https://cdn.7tv.app/emote/01HJQQXH8G000DQX3MV0V8TXAV/4x.avif" },
+  { name: "nono", img:"https://cdn.7tv.app/emote/01HJQNQ0DR000BYEJVE2JB38YF/4x.avif" },
+  { name: "AURA", img:"https://cdn.7tv.app/emote/01HP6YV4480005Q9JTQ3SSPSN3/4x.avif" }
+];
+
+let targetCombo=[], inputEl=document.getElementById("input"),
+emoteContainer=document.getElementById("emoteContainer"),
+timerEl=document.getElementById("timer"), wpmEl=document.getElementById("wpm"),
+accEl=document.getElementById("acc"), correctEl=document.getElementById("correct"),
+typedEl=document.getElementById("typed"), combosEl=document.getElementById("combos"),
+correctChars=0, totalTyped=0, comboCount=0, timeLeft=60, interval=null, running=false;
+
+let tabMatches=[], tabIndex=0;
+
+// Genera combo evitando repetir emotes
+function getRandomCombo(){
+  let combo=[];
+  let first=EMOTES[Math.floor(Math.random()*EMOTES.length)];
+  combo.push(first);
+  if(Math.random()<0.6){
+    let secondCandidates=EMOTES.filter(e=>e.second && e.name!==first.name);
+    if(secondCandidates.length){
+      let second=secondCandidates[Math.floor(Math.random()*secondCandidates.length)];
+      combo.push(second);
+    }
+  }
+  return combo;
+}
+
+function renderEmotes(){
+  emoteContainer.innerHTML="";
+  targetCombo.forEach(e=>{
+    let img=document.createElement("img");
+    img.src=e.img;
+    img.className="emote";
+    emoteContainer.appendChild(img);
+  });
+}
+
+function updateStats(){
+  correctChars=0;
+  let typed=inputEl.value;
+  let targetStr=targetCombo.map(e=>e.name).join(" ");
+  for(let i=0;i<typed.length;i++){if(targetStr[i]===typed[i]) correctChars++;}
+  totalTyped=typed.length;
+  wpmEl.textContent=Math.round((correctChars/5)/((60-timeLeft)/60||1));
+  accEl.textContent=totalTyped?Math.round(correctChars/totalTyped*100)+"%":"100%";
+  correctEl.textContent=correctChars;
+  typedEl.textContent=totalTyped;
+  combosEl.textContent=comboCount;
+}
+
+function nextCombo(){
+  targetCombo=getRandomCombo();
+  inputEl.value="";
+  renderEmotes();
+  tabMatches=[];
+  tabIndex=0;
+}
+
+inputEl.addEventListener("keydown",e=>{
+  if(e.key==="Tab"){ 
+    e.preventDefault();
+    let words=inputEl.value.split(" ");
+    let lastWord=words[words.length-1].toLowerCase();
+
+    if(!tabMatches.length || lastWord!==tabMatches[0].prefix){
+      tabMatches = EMOTES.filter(em=>em.name.toLowerCase().startsWith(lastWord))
+                         .sort((a,b)=>a.name.localeCompare(b.name))
+                         .map(em=>({name: em.name, prefix: lastWord}));
+      tabIndex=0;
+    }
+
+    if(tabMatches.length){
+      words[words.length-1]=tabMatches[tabIndex].name;
+      inputEl.value=words.join(" ")+" ";
+      tabIndex = (tabIndex+1)%tabMatches.length;
+    }
+  }
+});
+
+inputEl.addEventListener("input",()=>{
+  updateStats();
+  if(inputEl.value.trim()===targetCombo.map(e=>e.name).join(" ")){
+    comboCount++;
+    nextCombo();
+  }
+});
+
+function startTimer(){
+  if(running) return;
+  running=true;
+  interval=setInterval(()=>{
+    timeLeft--;
+    timerEl.textContent=timeLeft;
+    if(timeLeft<=0){
+      alert(`Tiempo terminado!\nCombos completados: ${comboCount}`);
+      clearInterval(interval);
+      running=false;
+    }
+  },1000);
+}
+
+document.getElementById("start").addEventListener("click",startTimer);
+document.getElementById("reset").addEventListener("click",nextCombo);
+
+targetCombo=getRandomCombo();
+renderEmotes();
+</script>
+</body>
+</html>
